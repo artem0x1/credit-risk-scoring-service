@@ -1,0 +1,125 @@
+project:
+  name: credit-scoring-home-credit
+  random_state: 42
+  target_column: TARGET
+  id_column: SK_ID_CURR
+
+paths:
+  data_dir: data
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+
+  models_dir: models
+  reports_dir: reports
+  figures_dir: reports/figures
+
+  raw:
+    application_train: data/raw/application_train.csv
+    application_test: data/raw/application_test.csv
+    bureau: data/raw/bureau.csv
+    bureau_balance: data/raw/bureau_balance.csv
+    previous_application: data/raw/previous_application.csv
+    pos_cash_balance: data/raw/POS_CASH_balance.csv
+    installments_payments: data/raw/installments_payments.csv
+    credit_card_balance: data/raw/credit_card_balance.csv
+    columns_description: data/raw/HomeCredit_columns_description.csv
+    sample_submission: data/raw/sample_submission.csv
+
+  interim:
+    application_train_clean: data/interim/application_train_clean.parquet
+    application_test_clean: data/interim/application_test_clean.parquet
+    bureau_agg: data/interim/bureau_agg.parquet
+    previous_application_agg: data/interim/previous_application_agg.parquet
+    pos_cash_agg: data/interim/pos_cash_agg.parquet
+    installments_agg: data/interim/installments_agg.parquet
+    credit_card_agg: data/interim/credit_card_agg.parquet
+    full_features: data/interim/full_features.parquet
+
+  processed:
+    train: data/processed/train.parquet
+    valid: data/processed/valid.parquet
+    test: data/processed/test.parquet
+    inference_sample: data/processed/inference_sample.json
+
+data:
+  test_size: 0.2
+  validation_size: 0.2
+  stratify: true
+
+  missing_values:
+    max_missing_rate: 0.95
+
+  anomalies:
+    days_employed_value: 365243
+
+features:
+  categorical_encoding: one_hot
+  scale_numeric: false
+
+  drop_columns:
+    - SK_ID_CURR
+
+  application:
+    use_external_scores: true
+    use_document_flags: true
+    use_social_circle_features: true
+
+  aggregations:
+    bureau:
+      enabled: true
+    previous_application:
+      enabled: true
+    pos_cash:
+      enabled: true
+    installments:
+      enabled: true
+    credit_card:
+      enabled: true
+
+model:
+  baseline:
+    name: logistic_regression
+    max_iter: 1000
+    class_weight: balanced
+
+  lightgbm:
+    objective: binary
+    metric: auc
+    boosting_type: gbdt
+    n_estimators: 1000
+    learning_rate: 0.03
+    num_leaves: 31
+    max_depth: -1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 0.1
+    random_state: 42
+    n_jobs: -1
+
+evaluation:
+  threshold: 0.5
+  metrics:
+    - roc_auc
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - ks
+
+artifacts:
+  lightgbm_model: models/lightgbm_model.pkl
+  logreg_model: models/logreg_model.pkl
+  preprocessor: models/preprocessor.pkl
+  feature_list: models/feature_list.json
+  thresholds: models/thresholds.json
+  metrics: models/metrics.json
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  model_path: models/lightgbm_model.pkl
+  preprocessor_path: models/preprocessor.pkl
+  feature_list_path: models/feature_list.json
+  thresholds_path: models/thresholds.json
