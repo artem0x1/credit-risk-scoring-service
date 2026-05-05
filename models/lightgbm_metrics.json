@@ -1,0 +1,11 @@
+{
+  "model": "lightgbm",
+  "best_iteration": 770,
+  "n_features": 322,
+  "n_categorical_features": 16,
+  "n_numeric_features": 306,
+  "train_roc_auc": 0.881491923646647,
+  "valid_roc_auc": 0.7883975154960883,
+  "train_pr_auc": 0.40962482529541816,
+  "valid_pr_auc": 0.2866316232885762
+}
