@@ -1,0 +1,10 @@
+{
+  "selected_model": "LightGBM",
+  "reason": "Best validation ROC-AUC, PR-AUC, KS and Brier score among evaluated models.",
+  "valid_roc_auc": 0.7883975154960883,
+  "valid_pr_auc": 0.2866316232885762,
+  "ks": 0.4337009175659095,
+  "brier_score": 0.1634571567710164,
+  "threshold": 0.6500000000000001,
+  "threshold_selection_method": "max_f1_on_validation"
+}

@@ -18,6 +18,12 @@ from src.models.train_lightgbm import (
     train_lightgbm_model,
 )
 
+from src.models.explain import (
+    create_lightgbm_feature_importance,
+    plot_lightgbm_feature_importance,
+    get_top_features,
+)
+
 __all__ = [
     "calculate_binary_classification_metrics",
     "calculate_threshold_metrics",
@@ -30,4 +36,7 @@ __all__ = [
     "calculate_scale_pos_weight",
     "get_default_lightgbm_params",
     "train_lightgbm_model",
+    "create_lightgbm_feature_importance",
+    "plot_lightgbm_feature_importance",
+    "get_top_features",
 ]
