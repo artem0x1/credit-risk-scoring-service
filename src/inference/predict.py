@@ -30,11 +30,6 @@ def load_pickle(path: str | Path):
 class CreditRiskPredictor:
     """
     Production-like predictor wrapper for credit risk inference.
-
-    Loads:
-    - LightGBM model;
-    - feature list;
-    - final model config with threshold.
     """
 
     def __init__(
@@ -42,6 +37,7 @@ class CreditRiskPredictor:
         model_path: str | Path,
         feature_list_path: str | Path,
         final_model_config_path: str | Path,
+        lightgbm_params_path: str | Path | None = None,
     ):
         self.model_path = Path(model_path)
         self.feature_list_path = Path(feature_list_path)
@@ -57,17 +53,62 @@ class CreditRiskPredictor:
             "LightGBM",
         )
 
+        if lightgbm_params_path is None:
+            lightgbm_params_path = self.model_path.parent / "lightgbm_params.json"
+
+        self.lightgbm_params_path = Path(lightgbm_params_path)
+
+        if self.lightgbm_params_path.exists():
+            self.lightgbm_params = load_json(self.lightgbm_params_path)
+            self.categorical_features = self.lightgbm_params.get(
+                "categorical_features",
+                [],
+            )
+        else:
+            self.lightgbm_params = {}
+            self.categorical_features = []
+
+    def _align_categorical_features(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Align pandas categorical columns with categories stored in LightGBM model.
+        """
+        X = X.copy()
+
+        pandas_categorical = getattr(self.model, "pandas_categorical", None)
+
+        if pandas_categorical is None:
+            return X
+
+        categorical_cols = [
+            col for col in self.categorical_features
+            if col in X.columns
+        ]
+
+        if len(categorical_cols) != len(pandas_categorical):
+            return X
+
+        for col, categories in zip(categorical_cols, pandas_categorical):
+            X[col] = X[col].cat.set_categories(categories)
+
+        return X
+
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
         """
         Predict probability of default for prepared dataframe.
         """
+        X = self._align_categorical_features(X)
+
         predictions = self.model.predict(
             X,
             num_iteration=self.model.best_iteration,
             validate_features=False,
         )
 
-        return pd.Series(predictions, index=X.index, name="probability_of_default")
+        return pd.Series(
+            predictions,
+            index=X.index,
+            name="probability_of_default",
+        )
 
     def predict_dataframe(
         self,
@@ -76,22 +117,11 @@ class CreditRiskPredictor:
     ) -> pd.DataFrame:
         """
         Predict credit risk for dataframe.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            Raw dataframe with all required feature columns.
-        id_col : str | None
-            Optional client ID column.
-
-        Returns
-        -------
-        result : pd.DataFrame
-            Prediction result with PD, risk grade and decision.
         """
         X = prepare_features_for_lightgbm(
             data=data,
             feature_cols=self.feature_cols,
+            categorical_features=self.categorical_features,
         )
 
         pd_values = self.predict_proba(X)
@@ -120,22 +150,11 @@ class CreditRiskPredictor:
     ) -> dict:
         """
         Predict credit risk for one client.
-
-        Parameters
-        ----------
-        client_features : dict
-            Client features.
-        client_id : int | str | None
-            Optional client identifier.
-
-        Returns
-        -------
-        response : dict
-            API-like prediction response.
         """
         X = prepare_single_client_features(
             client_features=client_features,
             feature_cols=self.feature_cols,
+            categorical_features=self.categorical_features,
         )
 
         pd_value = float(self.predict_proba(X).iloc[0])
