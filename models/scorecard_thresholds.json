@@ -1,0 +1,4 @@
+{
+  "default_threshold": 0.7000000000000002,
+  "selection_method": "max_f1_on_validation"
+}

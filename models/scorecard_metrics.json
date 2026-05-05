@@ -1,0 +1,14 @@
+{
+  "model": "woe_logistic_regression",
+  "n_features": 122,
+  "train_roc_auc": 0.7662909437644956,
+  "valid_roc_auc": 0.7683222366961743,
+  "train_pr_auc": 0.24794113520504205,
+  "valid_pr_auc": 0.25488715238599746,
+  "threshold": 0.7000000000000002,
+  "valid_predicted_bad_rate": 0.11766905679397753,
+  "valid_approval_rate": 0.8823309432060225,
+  "valid_precision_bad": 0.2655796600801437,
+  "valid_recall_bad": 0.3871097683786506,
+  "valid_f1_bad": 0.3150303228978856
+}
